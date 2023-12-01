@@ -44,7 +44,7 @@ if which reflector >/dev/null 2>&1; then
 fi
 
 if which yay >/dev/null 2>&1; then
-    yay -Syyu --noconfirm --needed --removemake --noeditmenu --nodiffmenu --nocleanmenu
+    yay -Syyu --noconfirm --needed --removemake --editmenu=false --diffmenu=false --cleanmenu=false
     yay -Yc --noconfirm
     exit
 fi
