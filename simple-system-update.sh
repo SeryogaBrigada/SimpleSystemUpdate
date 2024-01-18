@@ -39,9 +39,11 @@ if which apt >/dev/null 2>&1; then
 fi
 
 # Arch Linux
-if which reflector >/dev/null 2>&1; then
-    sudo reflector --verbose --protocol https --sort rate --latest 5 --download-timeout 5 --save /etc/pacman.d/mirrorlist
-fi
+# Update mirrorlist
+curl -s "https://archlinux.org/mirrorlist/?country=DE&protocol=https&use_mirror_status=on" \
+ | sed -e 's/^#Server/Server/' -e '/^#/d' \
+ | rankmirrors -n 5 - \
+ | sudo tee /etc/pacman.d/mirrorlist
 
 if which yay >/dev/null 2>&1; then
     yay -Syyu --noconfirm --needed --removemake --editmenu=false --diffmenu=false --cleanmenu=false
