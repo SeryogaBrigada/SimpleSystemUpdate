@@ -32,6 +32,6 @@ fi
 
 echo "Uninstalling from ${INSTALL_DIR}"
 
-[[ -f ${INSTALL_DIR}/simple-system-update.sh ]] && rm ${INSTALL_DIR}/simple-system-update.sh;
-[[ -f /usr/share/applications/simple-system-update.desktop ]] && sudo rm /usr/share/applications/simple-system-update.desktop;
-[[ -f "$(xdg-user-dir DESKTOP)/simple-system-update.desktop" ]] && rm "$(xdg-user-dir DESKTOP)/simple-system-update.desktop";
+[[ -f ${INSTALL_DIR}/simple-update.sh ]] && rm ${INSTALL_DIR}/simple-update.sh;
+[[ -f /usr/share/applications/simple-update.desktop ]] && sudo rm /usr/share/applications/simple-update.desktop;
+[[ -f "$(xdg-user-dir DESKTOP)/simple-update.desktop" ]] && rm "$(xdg-user-dir DESKTOP)/simple-update.desktop";

@@ -1,4 +1,4 @@
-# Simple System Update
+# Simple Update
 A simple one-click system update tool for Linux users.
 
 ### Installation

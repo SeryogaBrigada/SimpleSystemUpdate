@@ -30,28 +30,28 @@ else
     INSTALL_DIR="${1}"
 fi
 
-[[ -f ${INSTALL_DIR}/simple-system-update.sh ]] && rm ${INSTALL_DIR}/simple-system-update.sh;
-cp simple-system-update.sh ${INSTALL_DIR}
-chmod +x ${INSTALL_DIR}/simple-system-update.sh
+[[ -f ${INSTALL_DIR}/simple-update.sh ]] && rm ${INSTALL_DIR}/simple-update.sh;
+cp simple-update.sh ${INSTALL_DIR}
+chmod +x ${INSTALL_DIR}/simple-update.sh
 
-cat << 'EOF' | sudo tee /usr/share/applications/simple-system-update.desktop
+cat << 'EOF' | sudo tee /usr/share/applications/simple-update.desktop
 [Desktop Entry]
 Version=1.0
 Encoding=UTF-8
 Type=Application
-Exec=~/simple-system-update.sh
+Exec=~/simple-update.sh
 Icon=software-update-available
 Categories=System;
-Name=Simple System Update
-Name[ru]=Простое обновлениe системы
-Comment=Simple System Update
-Comment[ru]=Простое обновлениe системы
-GenericName=Simple System Update
-GenericName[ru]=Простое обновлениe системы
+Name=Simple Update
+Name[ru]=Простое обновлениe
+Comment=Simple Update
+Comment[ru]=Простое обновлениe
+GenericName=Simple Update
+GenericName[ru]=Простое обновлениe
 Keywords=update;
 Terminal=true
 EOF
 
-sudo sed -i "s|~|${INSTALL_DIR}|g" /usr/share/applications/simple-system-update.desktop
-cp /usr/share/applications/simple-system-update.desktop "$(xdg-user-dir DESKTOP)"
-chmod +x "$(xdg-user-dir DESKTOP)/simple-system-update.desktop"
+sudo sed -i "s|~|${INSTALL_DIR}|g" /usr/share/applications/simple-update.desktop
+cp /usr/share/applications/simple-update.desktop "$(xdg-user-dir DESKTOP)"
+chmod +x "$(xdg-user-dir DESKTOP)/simple-update.desktop"

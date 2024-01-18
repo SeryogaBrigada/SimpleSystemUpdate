@@ -1,6 +1,8 @@
 #!/bin/bash -e
 
 ##**************************************************************************
+## Simple Update
+##
 ## MIT License
 ##
 ## Copyright (C) Sergey Kovalenko <seryoga.engineering@gmail.com>
@@ -29,6 +31,11 @@ if which flatpak >/dev/null 2>&1; then
     flatpak update --noninteractive
 fi
 
+# Update Snap
+if which snap >/dev/null 2>&1; then
+    sudo snap refresh
+fi
+
 # Ubuntu/Debian
 if which apt >/dev/null 2>&1; then
    sudo apt update
@@ -39,15 +46,20 @@ if which apt >/dev/null 2>&1; then
 fi
 
 # Arch Linux
-# Update mirrorlist
-curl -s "https://archlinux.org/mirrorlist/?country=DE&protocol=https&use_mirror_status=on" \
- | sed -e 's/^#Server/Server/' -e '/^#/d' \
- | rankmirrors -n 5 - \
- | sudo tee /etc/pacman.d/mirrorlist
+if which pacman >/dev/null 2>&1; then
+    # Update mirrorlist
+    curl -s "https://archlinux.org/mirrorlist/?country=US&protocol=https&use_mirror_status=on" \
+     | sed -e 's/^#Server/Server/' -e '/^#/d' \
+     | rankmirrors -n 5 - \
+     | sudo tee /etc/pacman.d/mirrorlist
 
-if which yay >/dev/null 2>&1; then
-    yay -Syyu --noconfirm --needed --removemake --editmenu=false --diffmenu=false --cleanmenu=false
-    yay -Yc --noconfirm
+    if which yay >/dev/null 2>&1; then
+        yay -Syyu --noconfirm --needed --removemake --editmenu=false --diffmenu=false --cleanmenu=false
+        yay -Yc --noconfirm
+    else
+        sudo pacman -Syyu --noconfirm
+    fi
+
     exit
 fi
 
