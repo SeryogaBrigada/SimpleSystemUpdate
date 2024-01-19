@@ -47,11 +47,18 @@ fi
 
 # Arch Linux
 if which pacman >/dev/null 2>&1; then
-    # Update mirrorlist
-    curl -s "https://archlinux.org/mirrorlist/?country=US&protocol=https&use_mirror_status=on" \
-     | sed -e 's/^#Server/Server/' -e '/^#/d' \
-     | rankmirrors -n 5 - \
-     | sudo tee /etc/pacman.d/mirrorlist
+    if [[ -f /etc/pacman.d/mirrorlist ]]; then
+        if grep -q archlinux /etc/pacman.d/mirrorlist; then
+            # Update mirrorlist for clear Arch Linux
+            curl -s "https://archlinux.org/mirrorlist/?country=US&protocol=https&use_mirror_status=on" \
+                | sed -e 's/^#Server/Server/' -e '/^#/d' \
+                | rankmirrors -n 5 - \
+                | sudo tee /etc/pacman.d/mirrorlist
+        elif grep -q manjaro /etc/pacman.d/mirrorlist; then
+            # Update mirrorlist for Manjaro
+            sudo pacman-mirrors --fasttrack 5
+        fi
+    fi
 
     if which yay >/dev/null 2>&1; then
         yay -Syyu --noconfirm --needed --removemake --editmenu=false --diffmenu=false --cleanmenu=false
