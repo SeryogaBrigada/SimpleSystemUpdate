@@ -3,7 +3,7 @@
 ##**************************************************************************
 ## MIT License
 ##
-## Copyright (C) Sergey Kovalenko <seryoga.engineering@gmail.com>
+## Copyright (C) 2023-2024 Sergey Kovalenko <seryoga.engineering@gmail.com>
 ##
 ## Permission is hereby granted, free of charge, to any person obtaining a copy
 ## of this software and associated documentation files (the "Software"), to deal
@@ -24,14 +24,11 @@
 ## SOFTWARE.
 ##**************************************************************************
 
-if [[ -z $1 ]]; then
-    INSTALL_DIR=~
-else
-    INSTALL_DIR="${1}"
-fi
+# Uninstall script
+[[ -f /usr/bin/simple-system-update ]] && sudo rm /usr/bin/simple-system-update;
+# Uninstall desktop shortcut
+[[ -f /usr/share/applications/com.github.seryogabrigada.SimpleSystemUpdate.desktop ]] && sudo rm /usr/share/applications/com.github.seryogabrigada.SimpleSystemUpdate.desktop;
+[[ -f "$(xdg-user-dir DESKTOP)/com.github.seryogabrigada.SimpleSystemUpdate.desktop" ]] && rm "$(xdg-user-dir DESKTOP)/com.github.seryogabrigada.SimpleSystemUpdate.desktop";
+# Uninstall license file
+[[ -d /usr/share/licenses/simple-system-update ]] && sudo rm -r /usr/share/licenses/simple-system-update;
 
-echo "Uninstalling from ${INSTALL_DIR}"
-
-[[ -f ${INSTALL_DIR}/simple-update.sh ]] && rm ${INSTALL_DIR}/simple-update.sh;
-[[ -f /usr/share/applications/simple-update.desktop ]] && sudo rm /usr/share/applications/simple-update.desktop;
-[[ -f "$(xdg-user-dir DESKTOP)/simple-update.desktop" ]] && rm "$(xdg-user-dir DESKTOP)/simple-update.desktop";

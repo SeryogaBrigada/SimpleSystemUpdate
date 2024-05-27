@@ -1,0 +1,17 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Simple System Update
+Name[ru]=Простое обновлениe системы
+Comment=Simple System Update
+Comment[ru]=Простое обновлениe системы
+GenericName=Simple System Update
+GenericName[ru]=Простое обновлениe системы
+TryExec=/usr/bin/simple-system-update
+Exec=/usr/bin/simple-system-update
+Icon=software-update-available
+Categories=System;
+Keywords=update;
+StartupNotify=true
+Terminal=true
+StartupWMClass=SimpleSystemUpdate

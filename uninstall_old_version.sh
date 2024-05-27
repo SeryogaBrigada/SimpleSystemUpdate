@@ -24,13 +24,6 @@
 ## SOFTWARE.
 ##**************************************************************************
 
-# Script
-sudo cp simple-system-update /usr/bin/
-sudo chmod 755 /usr/bin/simple-system-update
-# Desktop shortcut
-sudo cp com.github.seryogabrigada.SimpleSystemUpdate.desktop /usr/share/applications/
-sudo chmod 644 /usr/share/applications/com.github.seryogabrigada.SimpleSystemUpdate.desktop
-# License file
-sudo mkdir -p /usr/share/licenses/simple-system-update
-sudo cp LICENSE /usr/share/licenses/simple-system-update/
-sudo chmod 644 /usr/share/licenses/simple-system-update/LICENSE
+[[ -f ~/simple-update.sh ]] && rm ~/simple-update.sh;
+[[ -f /usr/share/applications/simple-update.desktop ]] && sudo rm /usr/share/applications/simple-update.desktop;
+[[ -f "$(xdg-user-dir DESKTOP)/simple-update.desktop" ]] && rm "$(xdg-user-dir DESKTOP)/simple-update.desktop";
