@@ -19,9 +19,15 @@ It performs the following actions:
 
 ### Installation
 
-`install.sh` - this script installs the script and desktop shortcut.
+The program is available in [AUR](https://aur.archlinux.org/packages/simple-system-update):
+
+```
+yay -S simple-system-update
+```
+
+To install manually use `install.sh`.
 
 ### Uninstall
 
-`uninstall.sh` - uninstalls a manually installed application.
-> **Note:** To uninstall the old version of this application (which was installed in HOME) use `uninstall_old_version.sh`.
+`uninstall.sh` - to uninstall a manually installed application.
+> **Note:** To uninstall the old version of this application (which was installed in $HOME) use `uninstall_old_version.sh`.
