@@ -23,7 +23,7 @@
 ## OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ## SOFTWARE.
 ##**************************************************************************
-VERSION=1.0.0
+VERSION=1.0.1
 
 function display_help () {
     echo "Usage: $0 [OPTION]" >&2
@@ -94,11 +94,13 @@ fi
 # Arch Linux
 function get_country_code () {
     # Fallback country code if the ipinfo.io service is unavailable
-    COUNTRY=US
+    local COUNTRY=US
 
-    # Use ipinfo.io response
-    if ping -c 1 ipinfo.io >/dev/null 2>&1; then
-        COUNTRY=$(curl ipinfo.io | grep country | awk '{print $2}' | sed 's/[",]//g')
+    # Get the ISP country from ipinfo.io service
+    local FOUND_COUNTRY=$(curl -s ipinfo.io | jq -r '.country')
+
+    if [ ! -z $FOUND_COUNTRY ]; then
+        COUNTRY=$FOUND_COUNTRY
     fi
 
     echo $COUNTRY
