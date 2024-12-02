@@ -23,7 +23,7 @@
 ## OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 ## SOFTWARE.
 ##**************************************************************************
-VERSION=1.0.4
+VERSION=1.0.5
 
 function display_help () {
     echo "Usage: $0 [OPTION]" >&2
@@ -109,10 +109,12 @@ function get_country_code () {
 if which pacman >/dev/null 2>&1; then
     if [[ -f /etc/pacman.d/mirrorlist ]]; then
         if grep -q archlinux /etc/pacman.d/mirrorlist; then
-            # Update mirrorlist for Arch Linux
+            # Remove the .pacnew file since the mirrorlist will be updated on the next stage
+            [[ -f /etc/pacman.d/mirrorlist.pacnew ]] && sudo rm /etc/pacman.d/mirrorlist.pacnew;
+
+            # Update mirrorlist for current country
             SERVER_COUNTRY=$(get_country_code)
             echo "Update mirrorlist for $SERVER_COUNTRY"
-
             curl -s "https://archlinux.org/mirrorlist/?country=${SERVER_COUNTRY}&protocol=https&use_mirror_status=on" \
                 | sed -e 's/^#Server/Server/' -e '/^#/d' \
                 | rankmirrors -n 5 - \
@@ -120,16 +122,30 @@ if which pacman >/dev/null 2>&1; then
             # Check correctness
             if grep -q archlinux /etc/pacman.d/mirrorlist.tmp; then
                 echo "Operation successful, updating mirrorlist"
-                sudo rm /etc/pacman.d/mirrorlist
                 sudo mv /etc/pacman.d/mirrorlist.tmp /etc/pacman.d/mirrorlist
             else
-                echo "Unable to update mirrorlist! Continue with the current one."
+                echo "Mirrorlist update failed! Continue with the old one."
                 [[ -f /etc/pacman.d/mirrorlist.tmp ]] && sudo rm /etc/pacman.d/mirrorlist.tmp;
             fi
         elif grep -q manjaro /etc/pacman.d/mirrorlist; then
             # Update mirrorlist for Manjaro
             sudo pacman-mirrors --fasttrack 5
         fi
+    fi
+
+    # Update EndeavourOS mirrorlist if the new one is present
+    if [[ -f /etc/pacman.d/endeavouros-mirrorlist.pacnew ]] then
+        sudo mv /etc/pacman.d/endeavouros-mirrorlist.pacnew /etc/pacman.d/endeavouros-mirrorlist
+    fi
+
+    # Update makepkg.conf if the new one is present
+    if [[ -f /etc/makepkg.conf.pacnew ]]; then
+        sudo mv /etc/makepkg.conf.pacnew /etc/makepkg.conf
+        # Apply optimal parameters
+        sudo sed -i 's|-march=x86-64 -mtune=generic|-march=native -mtune=native|g' /etc/makepkg.conf
+        sudo sed -i 's|#MAKEFLAGS="-j2"|MAKEFLAGS="-j$(nproc)"|g' /etc/makepkg.conf
+        sudo sed -i "s|PKGEXT='.pkg.tar.xz'|PKGEXT='.pkg.tar.zst'|g" /etc/makepkg.conf
+        sudo sed -i "s|SRCEXT='.src.tar.gz'|SRCEXT='.src.tar.zst'|g" /etc/makepkg.conf
     fi
 
     # Update system packages first
