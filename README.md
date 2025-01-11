@@ -29,5 +29,9 @@ To install manually use `install.sh`.
 
 ### Uninstall
 
-`uninstall.sh` - to uninstall a manually installed application.
-> **Note:** To uninstall the old version of this application (which was installed in $HOME) use `uninstall_old_version.sh`.
+```
+yay -R simple-system-update
+```
+
+To uninstall a manually installed application use `uninstall.sh`.
+
