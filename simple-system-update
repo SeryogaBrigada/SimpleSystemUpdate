@@ -4,7 +4,7 @@
 ## Copyright (C) 2023-2025 Sergey Kovalenko <seryoga.engineering@gmail.com>
 ## SPDX-License-Identifier: MIT
 ##**************************************************************************
-VERSION=1.0.6
+VERSION=1.0.7
 
 function display_help () {
     echo "Usage: $0 [OPTION]" >&2
@@ -98,7 +98,7 @@ if which pacman >/dev/null 2>&1; then
             echo "Update mirrorlist for $SERVER_COUNTRY"
             curl -s "https://archlinux.org/mirrorlist/?country=${SERVER_COUNTRY}&protocol=https&use_mirror_status=on" \
                 | sed -e 's/^#Server/Server/' -e '/^#/d' \
-                | rankmirrors --parallel -n 5 - \
+                | rankmirrors -n 5 - \
                 | sudo tee /etc/pacman.d/mirrorlist.tmp
             # Check correctness
             if grep -q archlinux /etc/pacman.d/mirrorlist.tmp; then
