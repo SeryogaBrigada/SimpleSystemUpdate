@@ -4,7 +4,7 @@
 ## Copyright (C) 2023-2025 Sergey Kovalenko <seryoga.engineering@gmail.com>
 ## SPDX-License-Identifier: MIT
 ##**************************************************************************
-VERSION=1.0.7
+VERSION=1.0.8
 
 function display_help () {
     echo "Usage: $0 [OPTION]" >&2
@@ -95,17 +95,17 @@ if which pacman >/dev/null 2>&1; then
 
             # Update mirrorlist for current country
             SERVER_COUNTRY=$(get_country_code)
-            echo "Update mirrorlist for $SERVER_COUNTRY"
+            echo "Updating mirrorlist for $SERVER_COUNTRY:"
             curl -s "https://archlinux.org/mirrorlist/?country=${SERVER_COUNTRY}&protocol=https&use_mirror_status=on" \
                 | sed -e 's/^#Server/Server/' -e '/^#/d' \
                 | rankmirrors -n 5 - \
                 | sudo tee /etc/pacman.d/mirrorlist.tmp
             # Check correctness
             if grep -q archlinux /etc/pacman.d/mirrorlist.tmp; then
-                echo "Operation successful, updating mirrorlist"
                 sudo mv /etc/pacman.d/mirrorlist.tmp /etc/pacman.d/mirrorlist
+                echo " - mirrorlist updated."
             else
-                echo "Mirrorlist update failed! Continue with the old one."
+                echo " - update failed!"
                 [[ -f /etc/pacman.d/mirrorlist.tmp ]] && sudo rm /etc/pacman.d/mirrorlist.tmp;
             fi
         elif grep -q manjaro /etc/pacman.d/mirrorlist; then
@@ -116,17 +116,46 @@ if which pacman >/dev/null 2>&1; then
 
     # Update EndeavourOS mirrorlist if the new one is present
     if [[ -f /etc/pacman.d/endeavouros-mirrorlist.pacnew ]] then
+        echo "Updating endeavouros-mirrorlist"
         sudo mv /etc/pacman.d/endeavouros-mirrorlist.pacnew /etc/pacman.d/endeavouros-mirrorlist
+    fi
+
+    # Update pacman.conf if the new one is present
+    if [[ -f /etc/pacman.conf.pacnew ]]; then
+        echo "Updating pacman.conf from pacman.conf.pacnew:"
+        # If multilib repository is enabled in the original pacman.conf, enable it in the new one
+        if ! grep -q -F "#[multilib]" /etc/pacman.conf; then
+            if grep -q -F "#[multilib]" /etc/pacman.conf.pacnew; then
+                echo " - re-enabling [multilib] repository"
+                sudo sed -z -i 's|#\[multilib\]\n\#Include = /etc/pacman.d/mirrorlist|\[multilib\]\nInclude = /etc/pacman.d/mirrorlist|' /etc/pacman.conf.pacnew
+            fi
+        fi
+
+        # If EndeavourOS repository is enabled in the original pacman.conf, enable it in the new one
+        if grep -q -F "[endeavouros]" /etc/pacman.conf; then
+            if ! grep -q -F "[endeavouros]" /etc/pacman.conf.pacnew; then
+                echo " - adding EndeavourOS repository"
+                cat << 'EOF' | sudo tee -a /etc/pacman.conf.pacnew
+
+[endeavouros]
+SigLevel = PackageRequired
+Include = /etc/pacman.d/endeavouros-mirrorlist
+EOF
+            fi
+        fi
+
+        sudo mv /etc/pacman.conf.pacnew /etc/pacman.conf
     fi
 
     # Update makepkg.conf if the new one is present
     if [[ -f /etc/makepkg.conf.pacnew ]]; then
-        sudo mv /etc/makepkg.conf.pacnew /etc/makepkg.conf
+        echo "Updating makepkg.conf"
         # Apply optimal parameters
-        sudo sed -i 's|-march=x86-64 -mtune=generic|-march=native -mtune=native|g' /etc/makepkg.conf
-        sudo sed -i 's|#MAKEFLAGS="-j2"|MAKEFLAGS="-j$(nproc)"|g' /etc/makepkg.conf
-        sudo sed -i "s|PKGEXT='.pkg.tar.xz'|PKGEXT='.pkg.tar.zst'|g" /etc/makepkg.conf
-        sudo sed -i "s|SRCEXT='.src.tar.gz'|SRCEXT='.src.tar.zst'|g" /etc/makepkg.conf
+        sudo sed -i 's|-march=x86-64 -mtune=generic|-march=native -mtune=native|g' /etc/makepkg.conf.pacnew
+        sudo sed -i 's|#MAKEFLAGS="-j2"|MAKEFLAGS="-j$(nproc)"|g' /etc/makepkg.conf.pacnew
+        sudo sed -i "s|PKGEXT='.pkg.tar.xz'|PKGEXT='.pkg.tar.zst'|g" /etc/makepkg.conf.pacnew
+        sudo sed -i "s|SRCEXT='.src.tar.gz'|SRCEXT='.src.tar.zst'|g" /etc/makepkg.conf.pacnew
+        sudo mv /etc/makepkg.conf.pacnew /etc/makepkg.conf
     fi
 
     # Update system packages first

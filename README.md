@@ -3,10 +3,11 @@
 This tool serves as "One-click update" button for Linux users.
 It performs the following actions:
 
-- updates mirrorlist (Arch Linux)
-- checks for updates
-- performs update
-- removes invalid/unsupported packages
+- updating mirrorlist (Arch Linux)
+- updating pacman.conf from pacman.conf.pacnew (Arch Linux)
+- updating makepkg.conf from makepkg.conf.pacnew (Arch Linux)
+- system update
+- removing invalid/unsupported packages
 
 > **Note:** [ipinfo.io](https://ipinfo.io/) service is used to determine the country code for mirrorlist request.
 
