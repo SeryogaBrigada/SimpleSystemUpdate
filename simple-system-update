@@ -4,7 +4,7 @@
 ## Copyright (C) 2023-2025 Sergey Kovalenko <seryoga.engineering@gmail.com>
 ## SPDX-License-Identifier: MIT
 ##**************************************************************************
-VERSION=1.0.9
+VERSION=1.0.10
 
 function display_help () {
     echo "Usage: $0 [OPTION]" >&2
@@ -129,6 +129,14 @@ if which pacman >/dev/null 2>&1; then
             if grep -q -F "#[multilib]" /etc/pacman.conf.pacnew; then
                 echo " - re-enabling [multilib] repository"
                 sudo sed -z -i 's|#\[multilib\]\n\#Include = /etc/pacman.d/mirrorlist|\[multilib\]\nInclude = /etc/pacman.d/mirrorlist|' /etc/pacman.conf.pacnew
+            fi
+        fi
+
+        # If color mode is enabled in the original pacman.conf, enable it in the new one
+        if ! grep -q -F "#Color" /etc/pacman.conf; then
+            if grep -q -F "#Color" /etc/pacman.conf.pacnew; then
+                echo " - re-enabling color mode"
+                sudo sed -z -i 's|#Color|Color\nILoveCandy|' /etc/pacman.conf.pacnew
             fi
         fi
 
