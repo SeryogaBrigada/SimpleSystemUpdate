@@ -4,7 +4,7 @@
 ## Copyright (C) 2023-2025 Sergey Kovalenko <seryoga.engineering@gmail.com>
 ## SPDX-License-Identifier: MIT
 ##**************************************************************************
-VERSION=1.0.10
+VERSION=1.0.12
 
 function display_help () {
     echo "Usage: $0 [OPTION]" >&2
@@ -79,7 +79,7 @@ function get_country_code () {
     local COUNTRY=US
 
     # Get the ISP country from ipinfo.io service
-    local FOUND_COUNTRY=$(curl -s ipinfo.io | jq -r '.country')
+    local FOUND_COUNTRY=$(wget -q -O - "https://ipinfo.io" | jq -r '.country')
 
     if [ ! -z $FOUND_COUNTRY ]; then
         COUNTRY=$FOUND_COUNTRY
@@ -97,7 +97,7 @@ if which pacman >/dev/null 2>&1; then
             # Update mirrorlist for current country
             SERVER_COUNTRY=$(get_country_code)
             echo "Updating mirrorlist for $SERVER_COUNTRY:"
-            curl -s "https://archlinux.org/mirrorlist/?country=${SERVER_COUNTRY}&protocol=https&use_mirror_status=on" \
+            wget -q -O - "https://archlinux.org/mirrorlist/?country=${SERVER_COUNTRY}&protocol=https&use_mirror_status=on" \
                 | sed -e 's/^#Server/Server/' -e '/^#/d' \
                 | rankmirrors -n 5 - \
                 | sudo tee /etc/pacman.d/mirrorlist.tmp
