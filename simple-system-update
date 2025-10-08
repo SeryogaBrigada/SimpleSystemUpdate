@@ -79,7 +79,7 @@ function get_country_code () {
     local COUNTRY=US
 
     # Get the ISP country from ipinfo.io service
-    local FOUND_COUNTRY=$(wget -q -O - "https://ipinfo.io" | jq -r '.country')
+    local FOUND_COUNTRY=$(wget --timeout=3 -q -O - "https://ipinfo.io" | jq -r '.country')
 
     if [ ! -z $FOUND_COUNTRY ]; then
         COUNTRY=$FOUND_COUNTRY
@@ -91,13 +91,10 @@ function get_country_code () {
 if which pacman >/dev/null 2>&1; then
     if [[ -f /etc/pacman.d/mirrorlist ]]; then
         if grep -q archlinux /etc/pacman.d/mirrorlist; then
-            # Remove the .pacnew file since the mirrorlist will be updated on the next stage
-            [[ -f /etc/pacman.d/mirrorlist.pacnew ]] && sudo rm /etc/pacman.d/mirrorlist.pacnew;
-
             # Update mirrorlist for current country
             SERVER_COUNTRY=$(get_country_code)
             echo "Updating mirrorlist for $SERVER_COUNTRY:"
-            wget -q -O - "https://archlinux.org/mirrorlist/?country=${SERVER_COUNTRY}&protocol=https&use_mirror_status=on" \
+            wget --timeout=3 -q -O - "https://archlinux.org/mirrorlist/?country=${SERVER_COUNTRY}&protocol=https&use_mirror_status=on" \
                 | sed -e 's/^#Server/Server/' -e '/^#/d' \
                 | rankmirrors -n 5 - \
                 | sudo tee /etc/pacman.d/mirrorlist.tmp
@@ -105,6 +102,8 @@ if which pacman >/dev/null 2>&1; then
             if grep -q archlinux /etc/pacman.d/mirrorlist.tmp; then
                 sudo mv /etc/pacman.d/mirrorlist.tmp /etc/pacman.d/mirrorlist
                 echo " - mirrorlist updated."
+                # Remove the .pacnew file since the mirrorlist has already been updated
+                [[ -f /etc/pacman.d/mirrorlist.pacnew ]] && sudo rm /etc/pacman.d/mirrorlist.pacnew;
             else
                 echo " - update failed!"
                 [[ -f /etc/pacman.d/mirrorlist.tmp ]] && sudo rm /etc/pacman.d/mirrorlist.tmp;
