@@ -1,10 +1,10 @@
 #!/bin/bash -e
 
 ##**************************************************************************
-## Copyright (C) 2023-2025 Sergey Kovalenko <seryoga.engineering@gmail.com>
+## Copyright (C) 2023-2026 Sergey Kovalenko <seryoga.engineering@gmail.com>
 ## SPDX-License-Identifier: MIT
 ##**************************************************************************
-VERSION=1.0.12
+VERSION=1.0.13
 
 function display_help () {
     echo "Usage: $0 [OPTION]" >&2
@@ -25,7 +25,7 @@ function display_help () {
 
 function display_version () {
     echo "Simple System Update version $VERSION"
-    echo "Copyright (C) 2023-2025 Sergey Kovalenko <seryoga.engineering@gmail.com>"
+    echo "Copyright (C) 2023-2026 Sergey Kovalenko <seryoga.engineering@gmail.com>"
     echo "This is free software under MIT license."
     echo "In case of issue please report to <https://github.com/SeryogaBrigada/SimpleSystemUpdate/issues>"
     exit
@@ -79,7 +79,7 @@ function get_country_code () {
     local COUNTRY=US
 
     # Get the ISP country from ipinfo.io service
-    local FOUND_COUNTRY=$(wget --timeout=3 -q -O - "https://ipinfo.io" | jq -r '.country')
+    local FOUND_COUNTRY=$(wget --timeout=4 -q -O - "https://ipinfo.io" | jq -r '.country')
 
     if [ ! -z $FOUND_COUNTRY ]; then
         COUNTRY=$FOUND_COUNTRY
@@ -94,7 +94,7 @@ if which pacman >/dev/null 2>&1; then
             # Update mirrorlist for current country
             SERVER_COUNTRY=$(get_country_code)
             echo "Updating mirrorlist for $SERVER_COUNTRY:"
-            wget --timeout=3 -q -O - "https://archlinux.org/mirrorlist/?country=${SERVER_COUNTRY}&protocol=https&use_mirror_status=on" \
+            wget --timeout=4 -q -O - "https://archlinux.org/mirrorlist/?country=${SERVER_COUNTRY}&protocol=https&use_mirror_status=on" \
                 | sed -e 's/^#Server/Server/' -e '/^#/d' \
                 | rankmirrors -n 5 - \
                 | sudo tee /etc/pacman.d/mirrorlist.tmp
