@@ -4,7 +4,7 @@
 ## Copyright (C) 2023-2026 Sergey Kovalenko <seryoga.engineering@gmail.com>
 ## SPDX-License-Identifier: MIT
 ##**************************************************************************
-VERSION=1.0.15
+VERSION=1.1.0
 
 function display_help () {
     echo "Usage: $0 [OPTION]" >&2
@@ -12,14 +12,16 @@ function display_help () {
     echo "    -h, --help            display help and exit"
     echo "    -v, --version         display version"
     echo
-    echo "This tool serves as One-click update button for Linux users."
-    echo "It performs the following actions:"
-    echo "- updates mirrorlist (Arch Linux)"
-    echo "- checks for updates"
-    echo "- performs update"
-    echo "- removes invalid/unsupported packages"
-    echo "- updates makepkg configuration files"
-    echo "Note: ipinfo.io service is used to determine the country code for mirrorlist request."
+    echo "A one-click update tool for Linux users."
+    echo "Functions:"
+    echo "- snap update"
+    echo "- flatpak update"
+    echo "- system update via supported package managers"
+    echo "- invalid/unsupported packages removal (if supported by the package manager)"
+    echo "- mirrorlist update (Arch Linux)"
+    echo "- makepkg configuration files update and tweak for best performance (Arch Linux)"
+    echo
+    echo "Note: ipinfo.io service is used to determine the country code for mirrorlist generation."
     exit
 }
 
@@ -74,11 +76,19 @@ if which apt >/dev/null 2>&1; then
 fi
 
 # Arch Linux
-NETWORK_TIMEOUT=8
+# Check if jq is installed
+if ! command -v jq &>/dev/null; then
+    echo "Error: 'jq' is required but not installed."
+    echo "Install it with: sudo pacman -S jq"
+    exit 1
+fi
+
+# Network response timeout in seconds
+NETWORK_TIMEOUT=10
 
 function get_country_code () {
-    # Fallback country code if the ipinfo.io service is unavailable
-    local COUNTRY=US
+    # Fallback to worldwide servers if ipinfo.io is unavailable
+    local COUNTRY=""
 
     # Get the ISP country from ipinfo.io service
     local FOUND_COUNTRY=$(wget --timeout=$NETWORK_TIMEOUT -q -O - "https://ipinfo.io" | jq -r '.country')
@@ -90,26 +100,62 @@ function get_country_code () {
     echo $COUNTRY
 }
 
+function update_archlinux_mirrorlist () {
+    ARCH_MIRROR_URL="https://archlinux.org/mirrors/status/json/"
+    COUNTRY_CODE=$(get_country_code)                    # Filter by country
+    TOP_N=15                                            # Default top mirrors
+    MIRRORLIST_BACKUP="/etc/pacman.d/mirrorlist.bak"    # Backup file path
+    MIRRORLIST_TMP="/etc/pacman.d/mirrorlist.tmp"       # Temporary file path
+
+    # Get current UTC timestamp
+    NOW_TS=$(date -u +%s)
+    # 24 hours in seconds
+    CUTOFF=86400
+
+    # Generate list of the most up-to-date mirrors
+    echo "Fetching mirror list from Arch Linux..."
+    wget -q --timeout=$NETWORK_TIMEOUT -O - "$ARCH_MIRROR_URL" | jq -r \
+        --arg cc "$COUNTRY_CODE" \
+        --argjson now "$NOW_TS" \
+        --argjson cutoff "$CUTOFF" \
+        --argjson top "$TOP_N" '
+      [ .urls[]
+        | select(
+            (.protocol == "https")
+            and (.last_sync | type == "string")
+            and ((($now - ((.last_sync | strptime("%Y-%m-%dT%H:%M:%SZ") | mktime))) <= $cutoff))
+            and (($cc == "") or (.country_code == $cc))
+          )
+      ]
+      | sort_by(-.completion_pct, .score)
+      | .[0:$top]
+      | .[]
+      | "Server = \(.url)$repo/os/$arch"
+    ' | sudo tee "$MIRRORLIST_TMP"
+
+    # Check correctness
+    if grep -q archlinux "$MIRRORLIST_TMP"; then
+        # Backup old mirrorlist
+        sudo cp /etc/pacman.d/mirrorlist "$MIRRORLIST_BACKUP" 2>/dev/null
+
+        # Update the mirrorlist
+        sudo mv "$MIRRORLIST_TMP" /etc/pacman.d/mirrorlist
+
+        # Remove the .pacnew file since the mirrorlist has already been updated
+        [[ -f /etc/pacman.d/mirrorlist.pacnew ]] && sudo rm /etc/pacman.d/mirrorlist.pacnew;
+
+        echo "✅ Mirrorlist updated with top $TOP_N mirrors synced in last 24 hours."
+        echo "📂 Backup saved to $MIRRORLIST_BACKUP"
+    else
+        echo "⚠️  Mirrorlist update failed!"
+        [[ -f "$MIRRORLIST_TMP" ]] && sudo rm "$MIRRORLIST_TMP";
+    fi
+}
+
 if which pacman >/dev/null 2>&1; then
     if [[ -f /etc/pacman.d/mirrorlist ]]; then
         if grep -q archlinux /etc/pacman.d/mirrorlist; then
-            # Update mirrorlist for current country
-            SERVER_COUNTRY=$(get_country_code)
-            echo "Updating mirrorlist for $SERVER_COUNTRY:"
-            wget --timeout=$NETWORK_TIMEOUT -q -O - "https://archlinux.org/mirrorlist/?country=${SERVER_COUNTRY}&protocol=https&use_mirror_status=on" \
-                | sed -e 's/^#Server/Server/' -e '/^#/d' \
-                | rankmirrors -n 5 - \
-                | sudo tee /etc/pacman.d/mirrorlist.tmp
-            # Check correctness
-            if grep -q archlinux /etc/pacman.d/mirrorlist.tmp; then
-                sudo mv /etc/pacman.d/mirrorlist.tmp /etc/pacman.d/mirrorlist
-                echo " - mirrorlist updated."
-                # Remove the .pacnew file since the mirrorlist has already been updated
-                [[ -f /etc/pacman.d/mirrorlist.pacnew ]] && sudo rm /etc/pacman.d/mirrorlist.pacnew;
-            else
-                echo " - update failed!"
-                [[ -f /etc/pacman.d/mirrorlist.tmp ]] && sudo rm /etc/pacman.d/mirrorlist.tmp;
-            fi
+            update_archlinux_mirrorlist
         elif grep -q manjaro /etc/pacman.d/mirrorlist; then
             # Update mirrorlist for Manjaro
             sudo pacman-mirrors --fasttrack 5
